@@ -71,12 +71,13 @@ class mod_dataform_field_multiselect_patterns extends mod_dataform_field_pattern
         $fieldname = "field_{$fieldid}_$entryid";
         $menuoptions = $field->options_menu();
         $required = !empty($options['required']);
-        $selected = array();
 
-        if ($entryid > 0){
-            if ($content = s($entry->{"c{$fieldid}_content"})) {
-                $selected = explode('#', $content);
-            }
+        $content = !empty($entry->{"c{$fieldid}_content"}) ? $entry->{"c{$fieldid}_content"} : null;
+        
+        if ($entryid > 0 and $content){
+            $selected = explode('#', $content);
+        } else {
+            $selected = array();
         }
         
         // check for default values

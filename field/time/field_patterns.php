@@ -88,7 +88,7 @@ class mod_dataform_field_time_patterns extends mod_dataform_field_patterns {
 
         // If date only don't add time to selector
         $time = (empty($options['date']) ? 'time_' : '');      
-         $options = array();
+        $options = array();
         // Optional
         $options['optional'] = (!empty($options['required']) ? false : true);
         // Start year

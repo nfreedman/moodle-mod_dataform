@@ -75,11 +75,7 @@ class mod_dataform_field_select_patterns extends mod_dataform_field_patterns {
         $menuoptions = $field->options_menu();
         $fieldname = "field_{$fieldid}_$entryid";
         $required = !empty($options['required']);
-        $selected = 0;
-        
-        if ($entryid > 0){
-            $selected = (int) $entry->{"c{$fieldid}_content"};
-        }
+        $selected = !empty($entry->{"c{$fieldid}_content"}) ? (int) $entry->{"c{$fieldid}_content"} : 0;
         
         // check for default value
         if (!$selected and $defaultval = $field->get('param2')) {

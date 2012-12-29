@@ -435,9 +435,20 @@ function xmldb_dataform_upgrade($oldversion) {
 
     if ($oldversion < 2012121900) {
 
-        // Change groupby 0 to null in views and filters
+        // Changing type of field groupby on table dataform_views to char.
+        $table = new xmldb_table('dataform_views');
+        $field = new xmldb_field('groupby', XMLDB_TYPE_CHAR, '64', null, null, null, '', 'perpage');
+        $dbman->change_field_type($table, $field);
+
+        // Changing type of field groupby on table dataform_filters to char.
+        $table = new xmldb_table('dataform_filters');
+        $field = new xmldb_field('groupby', XMLDB_TYPE_CHAR, '64', null, null, null, '', 'selection');
+        $dbman->change_field_type($table, $field);
+
+        // Change groupby 0 to null in existing views and filters
         $DB->set_field('dataform_views', 'groupby', null, array('groupby' => 0));
         $DB->set_field('dataform_filters', 'groupby', null, array('groupby' => 0));
+
         // dataform savepoint reached
         upgrade_mod_savepoint(true, 2012121900, 'dataform');
     }
