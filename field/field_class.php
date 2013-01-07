@@ -281,6 +281,13 @@ abstract class dataform_field_base {
     /**
      *
      */
+    public static function is_internal() {
+        false;
+    }
+    
+    /**
+     *
+     */
     protected function is_visible($entryowner) {
         global $USER;
 
@@ -444,7 +451,7 @@ abstract class dataform_field_base {
         $fieldname = $this->name();
         // TODO
         // Ugly hack for internal fields
-        if ($fieldid < 0) {
+        if ($this->is_internal()) {
             $setting = reset($importsettings);
             $csvname = $setting['name'];
         } else {
@@ -570,7 +577,7 @@ abstract class dataform_field_base {
 
         static $i=0;
         $i++;
-        $fieldid = $this->field->id < 0 ? '_'. abs($this->field->id) : $this->field->id;
+        $fieldid = $this->field->id;
         $name = "df_{$fieldid}_{$i}";
 
         $varcharcontent = $this->get_sql_compare_text();
@@ -633,7 +640,18 @@ abstract class dataform_field_base {
     }
 
     /**
+     * Whether this field provides join sql for fetching content
      *
+     * @return bool
+     */
+    public function is_joined() {
+        return false;
+    }
+
+    /**
+     * Whether this field content resides in dataform_contents
+     *
+     * @return bool
      */
     public function is_dataform_content() {
         return true;

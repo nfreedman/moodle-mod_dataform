@@ -52,19 +52,20 @@ class mod_dataform_view_entries_form extends moodleform {
      */
     function add_action_buttons($cancel = true, $submit = null) {
         $mform = &$this->_form;
+        
+        static $i = 0;
+        $i++;
 
-        $mform->addElement('html', '<div class="mdl-align">');
         $arr = array();
         $submitlabel = $submit ? $submit : get_string('savechanges');
-        $arr[] = &$mform->createElement('submit', 'submitbutton', $submitlabel);
+        $arr[] = &$mform->createElement('submit', "submitbutton$i", $submitlabel);
         if ($this->add_action_save_continue()) {
-            $arr[] = &$mform->createElement('submit', 'submitreturnbutton', get_string('savecontinue', 'dataform'));
+            $arr[] = &$mform->createElement('submit', "submitreturnbutton$i", get_string('savecontinue', 'dataform'));
         }
         if ($cancel) {
-            $arr[] = &$mform->createElement('cancel');
+            $arr[] = &$mform->createElement('cancel', "cancel$i");
         }
         $mform->addGroup($arr, 'buttonarr', null, ' ', false);
-        $mform->addElement('html', '</div>');
     }
 
     /**

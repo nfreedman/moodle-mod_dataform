@@ -40,6 +40,25 @@ class dataform_field__rating extends dataform_field_no_content {
     const _RATINGMIN = 'ratingmin';
     const _RATINGSUM = 'ratingsum';
 
+    /**
+     *
+     */
+    public static function is_internal() {
+        true;
+    }
+    
+    /**
+     * Overriding parent to indicate that this field provides join sql
+     *
+     * @return bool
+     */
+    public function is_joined() {
+        return true;
+    }
+    
+    /**
+     *
+     */
     public static function get_field_objects($dataid) {
         $fieldobjects = array();
         

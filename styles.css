@@ -53,8 +53,8 @@
   overflow: auto;
 }
 
-#page-mod-dataform-embed .mform fieldset.hidden,
-#page-mod-dataform-view .mform fieldset.hidden {
+#page-mod-dataform-embed.gecko .mform fieldset.hidden,
+#page-mod-dataform-view.gecko .mform fieldset.hidden {
   display: table-column;
 }
 

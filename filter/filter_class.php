@@ -47,6 +47,7 @@ class dataform_filter {
     protected $_filteredtables = null;
     protected $_searchfields = null;
     protected $_sortfields = null;
+    protected $_joins = null;
 
     /**
      * constructor
@@ -84,15 +85,6 @@ class dataform_filter {
         // CONTENT sql ($dataformcontent is an array of fieldid whose content needs to be fetched)
         list($dataformcontent, $whatcontent, $contenttables, $contentparams) = $this->get_content_sql($fields);
     
-        // Add rating tables and content if needed
-        if ($this->filter_on_rating()) {
-            $whatcontent .= $whatcontent ? ', ' : '';
-            $whatcontent .= $fields[dataform_field__rating::_RATING]->get_select_sql();
-            list($sqlfrom, $ratingparams) = $fields[dataform_field__rating::_RATING]->get_join_sql();
-            $contenttables .= " $sqlfrom ";
-            $contentparams = array_merge($contentparams, $ratingparams);
-        }
-
         return array(
             " $searchtables $sorttables $contenttables ",
             $wheresearch,
@@ -110,30 +102,9 @@ class dataform_filter {
         $this->_filteredtables = null;
         $this->_searchfields = $this->customsearch ? unserialize($this->customsearch) : array();
         $this->_sortfields = $this->customsort ? unserialize($this->customsort) : array();
+        $this->_joins = array();
     }
     
-    /**
-     * TODO
-     */
-    protected function filter_on_rating() {
-        $ratingfieldids = array(
-            dataform_field__rating::_RATING,
-            dataform_field__rating::_RATINGAVG,
-            dataform_field__rating::_RATINGCOUNT,
-            dataform_field__rating::_RATINGMAX,
-            dataform_field__rating::_RATINGMIN,
-            dataform_field__rating::_RATINGSUM,
-        );
-        foreach ($ratingfieldids as $fieldid) {
-            if (array_key_exists($fieldid, $this->_searchfields)
-                        or array_key_exists($fieldid, $this->_sortfields)
-                        or in_array($fieldid, $this->contentfields)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
      *
      */
@@ -154,13 +125,17 @@ class dataform_filter {
             $whereor = array();
             foreach($searchfields as $fieldid => $searchfield) {
                 // if we got this far there must be some actual search values
-                if ($fieldid > 0) { // only for user fields
-                    $searchfrom[] = $fieldid;
-                }
-
                 $field = $fields[$fieldid];
 
-                // add AND search clauses
+                // Search from is required only for non-internal fields
+                if (!$field::is_internal()) {
+                    $searchfrom[] = $fieldid;
+                }
+                
+                // Register join field if applicable
+                $this->register_join_field($field);
+
+                // Add AND search clauses
                 if (!empty($searchfield['AND'])) {
                     foreach ($searchfield['AND'] as $option) {
                         if ($fieldsqloptions = $field->get_search_sql($option)) {
@@ -241,12 +216,16 @@ class dataform_filter {
             $orderby = array();
             foreach ($sortfields as $fieldid => $sortdir) {
                 $field = $fields[$fieldid];
+                
                 $sortname = $field->get_sort_sql();
-                if ($fieldid > 0) {
-                    // only user fields are added to sorties
+                // Add non-internal fields to sorties
+                if (!$field::is_internal()) {
                     $sorties[$fieldid] = $sortname;
                 }
                 $orderby[] = "$sortname ". ($sortdir ? 'DESC' : 'ASC');
+                
+                // Register join field if applicable
+                $this->register_join_field($field);                
             }
         }
 
@@ -287,17 +266,24 @@ class dataform_filter {
             $contentfrom = array();
             $paramcount = 0;
             foreach ($contentfields as $fieldid) {
-                // User fields
-                if ($fieldid < 0 or !isset($fields[$fieldid]) or !$selectsql = $fields[$fieldid]->get_select_sql()) {
+                // Skip non-selectable fields (some of the internal fields e.g. _user which are included in the select clause by default)
+                if (!isset($fields[$fieldid]) or !$selectsql = $fields[$fieldid]->get_select_sql()) {
                     continue;
                 }
                 
                 $field = $fields[$fieldid];
-                // Add what content if already added for sort or search
+
+                // Register join field if applicable
+                if ($this->register_join_field($field)) {
+                    // Processing is done separately
+                    continue;
+                }
+                
+                // Add what content if field already included for sort or search
                 if (in_array($fieldid, $this->_filteredtables)) {
                     $whatcontent[] = $selectsql;
                 
-                // If not in sort or search separate dataform_content content b/c of limit on joins
+                // If not in sort or search separate dataform_contents content b/c of limit on joins
                 // This content would be fetched after the entries and added to the entries
                 } else { 
                     if ($field->is_dataform_content()) {
@@ -311,10 +297,32 @@ class dataform_filter {
                     }
                 }
             }
+            
+            // Process join fields
+            foreach ($this->_joins as $joinfield) {
+                $whatcontent[] = $field->get_select_sql();
+                list($sqlfrom, $fieldparams) = $field->get_join_sql();
+                $contentfrom[$fieldid] = $sqlfrom;
+                $params = array_merge($params, $fieldparams);
+            }
+                
             $whatcontent = !empty($whatcontent) ? ', '. implode(', ', $whatcontent) : ' ';
             $contenttables = ' '. implode(' ', $contentfrom);
         }
         return array($dataformcontent, $whatcontent, $contenttables, $params);
+    }
+
+    /**
+     * @return bool True if the field is registered, false otherwise
+     */
+    public function register_join_field($field) {
+        if ($field->is_joined()) {
+            if (!isset($this->_joins[$field->type])) {
+                $this->_joins[$field->type] = $field;
+            }
+            return true;
+        }
+        return false;
     }
 
     // Append sort option

@@ -1352,10 +1352,9 @@ class dataform_view_base {
     public function process_entries_data() {
         global $CFG;
 
-        // check first if returning from form
+        // Check first if returning from form
         $update = optional_param('update', '', PARAM_TAGLIST);
-        $cancel = optional_param('cancel', 0, PARAM_BOOL);
-        if (!$cancel and $update and confirm_sesskey()) {
+        if ($update and confirm_sesskey()) {
 
             // get entries only if updating existing entries
             if ($update != self::ADD_NEW_ENTRY) {
@@ -1368,37 +1367,40 @@ class dataform_view_base {
             $this->set__display_definition();
 
             $entriesform = $this->get_entries_form();
-            // we already know that it isn't cancelled
-            if ($data = $entriesform->get_data()) {
-                // validated successfully so process request
-                $processed = $this->_entries->process_entries('update', $update, $data, true);
+            
+            // Process the form if not cancelled
+            if (!$entriesform->is_cancelled()) {
+                if ($data = $entriesform->get_data()) {
+                    // validated successfully so process request
+                    $processed = $this->_entries->process_entries('update', $update, $data, true);
 
-                if (!empty($data->submitreturnbutton)) {
-                    // If we have just added new entries refresh the content
-                    // This is far from ideal because this new entries may be
-                    // spread out in the form when we return to edit them
-                    if ($this->_editentries < 0) {
-                        $this->_entries->set_content();
-                    }                        
+                    if (!empty($data->submitreturnbutton)) {
+                        // If we have just added new entries refresh the content
+                        // This is far from ideal because this new entries may be
+                        // spread out in the form when we return to edit them
+                        if ($this->_editentries < 0) {
+                            $this->_entries->set_content();
+                        }                        
 
-                    // so that return after adding new entry will return the added entry 
-                    $this->_editentries = implode(',',$processed[1]);
-                    $this->_returntoentriesform = true;
-                    return true;
-                } else {
-                    // So that we can show the new entries if we so wish
-                    if ($this->_editentries < 0) {
+                        // so that return after adding new entry will return the added entry 
                         $this->_editentries = implode(',',$processed[1]);
+                        $this->_returntoentriesform = true;
+                        return true;
                     } else {
-                        $this->_editentries = '';
+                        // So that we can show the new entries if we so wish
+                        if ($this->_editentries < 0) {
+                            $this->_editentries = implode(',',$processed[1]);
+                        } else {
+                            $this->_editentries = '';
+                        }
+                        $this->_returntoentriesform = false;
+                        return $processed;
                     }
-                    $this->_returntoentriesform = false;
-                    return $processed;
+                } else {
+                    // form validation failed so return to form
+                    $this->_returntoentriesform = true;
+                    return false;
                 }
-            } else {
-                // form validation failed so return to form
-                $this->_returntoentriesform = true;
-                return false;
             }
         }
 

@@ -664,7 +664,7 @@ class dataform {
  *********************************************************************************/
 
     /**
-     * initialize the internal fields
+     * Initialize if needed and return the internal fields
      */
     protected function get_internal_fields() {
         global $CFG;

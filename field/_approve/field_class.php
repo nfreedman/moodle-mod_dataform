@@ -41,6 +41,13 @@ class dataform_field__approve extends dataform_field_no_content {
     }
 
     /**
+     *
+     */
+    public static function is_internal() {
+        true;
+    }
+    
+    /**
      * 
      */
     public function get_internalname() {

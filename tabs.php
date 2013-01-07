@@ -28,8 +28,8 @@
 $is_templatemanager = has_capability('mod/dataform:managetemplates', $this->context);
 $is_entriesmanager = has_capability('mod/dataform:manageentries', $this->context);
 
-// tabs are displayed only for managers
-if (isloggedin() and ($is_templatemanager or $is_entriesmanager)) {
+// tabs are displayed only for template managers
+if (isloggedin() and $is_templatemanager) {
     if (empty($currenttab) or empty($this->data) or empty($this->course)) {
         throw new moodle_exception('emptytab', 'dataform');
     }
@@ -64,8 +64,8 @@ if (isloggedin() and ($is_templatemanager or $is_entriesmanager)) {
             //$row[] = new tabobject('reports', new moodle_url('/mod/dataform/reports.php', array('d' => $this->id())), get_string('reports','dataform'));
 
         // entries manager can do import
-        } else if ($is_entriesmanager)  {
-            $row[] = new tabobject('import', new moodle_url('/mod/dataform/import.php', array('d' => $this->id())), get_string('import', 'dataform'));
+        //} else if ($is_entriesmanager)  {
+        //    $row[] = new tabobject('import', new moodle_url('/mod/dataform/import.php', array('d' => $this->id())), get_string('import', 'dataform'));
         }
 
         $tabs[] = $row;

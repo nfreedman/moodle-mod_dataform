@@ -29,6 +29,16 @@ class dataform_field__time extends dataform_field_no_content {
     const _TIMECREATED = 'timecreated';
     const _TIMEMODIFIED = 'timemodified';
 
+    /**
+     *
+     */
+    public static function is_internal() {
+        true;
+    }
+    
+    /**
+     *
+     */
     public static function get_field_objects($dataid) {
         $fieldobjects = array();
         
